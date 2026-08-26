@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/masa-san-jp/viewer-response-notes/schemas/research-signal-export.schema.json",
+  "title": "research-signal-export/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "export_id", "source_commit", "signals"],
+  "properties": {
+    "schema_id": {"const": "research-signal-export/v1"},
+    "export_id": {"type": "string", "pattern": "^VRSE-[A-Za-z0-9._-]+$"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "signals": {
+      "type": "array",
+      "items": {"$ref": "viewer-response-record.schema.json"}
+    }
+  }
+}
