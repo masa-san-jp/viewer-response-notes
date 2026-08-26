@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/masa-san-jp/viewer-response-notes/schemas/viewer-response-record.schema.json",
+  "title": "viewer-response-record/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "work_id",
+    "requirement_id",
+    "source_kind",
+    "presentation_mode",
+    "requirement_tags",
+    "sample_size",
+    "outcome_counts",
+    "evidence_refs",
+    "certainty",
+    "consent_scope",
+    "source_commit",
+    "observed_at",
+    "dedup_key"
+  ],
+  "properties": {
+    "record_id": {"type": "string", "pattern": "^VRR-[A-Z0-9][A-Z0-9._-]*$"},
+    "work_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"},
+    "requirement_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"},
+    "source_kind": {"type": "string", "enum": ["measured", "external"]},
+    "presentation_mode": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "requirement_tags": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"}
+    },
+    "sample_size": {"type": "integer", "minimum": 0},
+    "outcome_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pass", "fail", "unknown"],
+      "properties": {
+        "pass": {"type": "integer", "minimum": 0},
+        "fail": {"type": "integer", "minimum": 0},
+        "unknown": {"type": "integer", "minimum": 0}
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "certainty": {"type": "string", "enum": ["high", "medium", "low", "unknown"]},
+    "consent_scope": {"type": "string", "const": "aggregate-only"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "dedup_key": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

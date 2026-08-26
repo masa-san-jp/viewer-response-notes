@@ -1,0 +1,2 @@
+# The viewer-response-notes contract uses only the Python standard library.
+
