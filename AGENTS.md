@@ -9,6 +9,12 @@ assets, or credentials.
 
 ## Authority and read order
 
+AAK-12 / Issue #6 adds the owner memory wrapper described in
+`docs/viewer-memory.md`, under AAK-SPEC/PLAN pin
+`b0e7c7f8d0a1f756fa708deef4fb380a62e45e0d`. Its explicit synthetic external Git
+stores are test outputs; actual record correction and external publication gates
+remain in force. No actual records are migrated by the implementation task.
+
 Use repository-local evidence so a fresh agent does not depend on conversation
 history. Read these sources in order:
 

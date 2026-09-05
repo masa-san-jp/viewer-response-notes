@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/masa-san-jp/viewer-response-notes/schemas/viewer-memory.schema.json",
+  "title": "viewer-memory/v1",
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"},
+    "reference": {"type": "object", "additionalProperties": false, "required": ["origin_instance_id", "owner_repository", "record_id", "revision"], "properties": {"origin_instance_id": {"$ref": "#/$defs/identifier"}, "owner_repository": {"$ref": "#/$defs/identifier"}, "record_id": {"$ref": "#/$defs/identifier"}, "revision": {"type": "integer", "minimum": 1}}},
+    "source": {"type": "object", "additionalProperties": false, "required": ["origin_instance_id", "source_repository", "record_id", "revision", "code_commit", "knowledge_commit", "locator", "content_sha256"], "properties": {"origin_instance_id": {"$ref": "#/$defs/identifier"}, "source_repository": {"$ref": "#/$defs/identifier"}, "record_id": {"$ref": "#/$defs/identifier"}, "revision": {"type": "integer", "minimum": 1}, "code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "knowledge_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "locator": {"$ref": "#/$defs/identifier"}, "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact",
+    "payload"
+  ],
+  "properties": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_version",
+        "record_id",
+        "revision",
+        "origin_instance_id",
+        "creator_id",
+        "owner_repository",
+        "collection_id",
+        "kind",
+        "payload_schema",
+        "payload_ref",
+        "content_sha256",
+        "sources",
+        "derived_from",
+        "epistemic_status",
+        "lifecycle",
+        "applicability",
+        "rights",
+        "access_scope",
+        "consent_ref",
+        "created_at",
+        "reviewed_at",
+        "valid_until",
+        "producer",
+        "supersedes",
+        "invalidates"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "artifact-record/v1"
+        },
+        "record_id": {
+          "type": "string"
+        },
+        "revision": {
+          "const": 1
+        },
+        "origin_instance_id": {
+          "type": "string"
+        },
+        "creator_id": {
+          "type": "string"
+        },
+        "owner_repository": {
+          "const": "viewer-response-notes"
+        },
+        "collection_id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "viewer-response"
+        },
+        "payload_schema": {
+          "const": "viewer-memory/v1"
+        },
+        "payload_ref": {
+          "type": "string"
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sources": {
+          "type": "array", "items": {"$ref": "#/$defs/source"}
+        },
+        "derived_from": {
+          "type": "array", "items": {"$ref": "#/$defs/reference"}
+        },
+        "epistemic_status": {
+          "enum": [
+            "observed",
+            "externally-supported"
+          ]
+        },
+        "lifecycle": {
+          "const": "accepted"
+        },
+        "applicability": {
+          "type": "object", "additionalProperties": false, "required": ["work_id", "presentation_conditions_ref"], "properties": {"work_id": {"$ref": "#/$defs/identifier"}, "presentation_conditions_ref": {"$ref": "#/$defs/identifier"}}
+        },
+        "rights": {
+          "type": "object", "additionalProperties": false, "required": ["knowledge_write", "redistribute"], "properties": {"knowledge_write": {"const": true}, "redistribute": {"const": false}}
+        },
+        "access_scope": {
+          "const": "creator-private"
+        },
+        "consent_ref": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "reviewed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "valid_until": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "producer": {
+          "type": "object", "additionalProperties": false, "required": ["kind", "generator_version", "code_commit", "run_id"], "properties": {"kind": {"enum": ["agent", "human", "tool"]}, "generator_version": {"$ref": "#/$defs/identifier"}, "code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "run_id": {"$ref": "#/$defs/identifier"}}
+        },
+        "supersedes": {
+          "type": "array", "items": {"$ref": "#/$defs/reference"}
+        },
+        "invalidates": {
+          "type": "array", "items": {"$ref": "#/$defs/reference"}
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "context"
+      ],
+      "properties": {
+        "record": {
+          "$ref": "viewer-response-record.schema.json"
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "project_id",
+            "work_revision",
+            "intended_experience_refs",
+            "collection_method",
+            "period_start",
+            "period_end",
+            "presentation_conditions_ref",
+            "source_identity",
+            "sample_set_ids",
+            "overlaps_sample_sets",
+            "corrects_record_ids"
+          ],
+          "properties": {
+            "project_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+            },
+            "work_revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "intended_experience_refs": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+              }
+            },
+            "collection_method": {
+              "enum": [
+                "survey",
+                "observation",
+                "external-review",
+                "unknown"
+              ]
+            },
+            "period_start": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "period_end": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "presentation_conditions_ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+            },
+            "source_identity": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+            },
+            "sample_set_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+              }
+            },
+            "overlaps_sample_sets": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+              }
+            },
+            "corrects_record_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

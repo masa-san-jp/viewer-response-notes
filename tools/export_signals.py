@@ -25,6 +25,8 @@ def build_export(records: list[dict], *, export_id: str, source_commit: str) -> 
 
 def write_export(envelope: dict, output: Path) -> str:
     content = (stable_json(envelope) + "\n").encode("utf-8")
+    if output.is_symlink():
+        raise ContractError("VIEWER-EXPORT-CONFLICT", "symlink output is not permitted", str(output))
     if output.exists():
         if output.read_bytes() == content:
             return "ALREADY_EXPORTED"
@@ -36,7 +38,15 @@ def write_export(envelope: dict, output: Path) -> str:
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary_name, output)
+        # Atomic create-only publication: a concurrent writer is never overwritten.
+        try:
+            os.link(temporary_name, output)
+        except FileExistsError:
+            if not output.is_symlink() and output.read_bytes() == content:
+                os.unlink(temporary_name)
+                return "ALREADY_EXPORTED"
+            raise ContractError("VIEWER-EXPORT-CONFLICT", "concurrent output differs", str(output))
+        os.unlink(temporary_name)
     except Exception:
         try:
             os.unlink(temporary_name)
@@ -48,14 +58,26 @@ def write_export(envelope: dict, output: Path) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("records", type=Path)
-    parser.add_argument("--export-id", required=True)
-    parser.add_argument("--source-commit", required=True)
+    parser.add_argument("records", type=Path, nargs="?")
+    parser.add_argument("--export-id")
+    parser.add_argument("--source-commit")
+    parser.add_argument("--memory-query", type=Path, help="explicit external pinned viewer memory query JSON")
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     try:
-        result = write_export(build_export(load_jsonl(args.records), export_id=args.export_id, source_commit=args.source_commit), args.output)
-    except ContractError as exc:
+        if args.memory_query:
+            from viewer_memory import ViewerMemory
+            query = json.loads(args.memory_query.read_text())
+            if set(query) != {"store_root", "creator", "collection", "code_commit", "knowledge_commit", "scope", "at"}:
+                raise ValueError("closed memory query required")
+            memory = ViewerMemory(query["store_root"], query["creator"], query["collection"], query["code_commit"])
+            envelope = memory.query(query["knowledge_commit"], query["scope"], at=query["at"])
+        else:
+            if args.records is None or not args.export_id or not args.source_commit:
+                parser.error("records, --export-id and --source-commit are required without --memory-query")
+            envelope = build_export(load_jsonl(args.records), export_id=args.export_id, source_commit=args.source_commit)
+        result = write_export(envelope, args.output)
+    except (ValueError, OSError, KeyError, TypeError) as exc:
         print(str(exc))
         return 2
     print(result)
