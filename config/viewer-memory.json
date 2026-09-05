@@ -1,0 +1,7 @@
+{
+  "contract_version": "viewer-memory/v1",
+  "owner": "viewer-response-notes",
+  "context_fields": ["project_id", "work_revision", "intended_experience_refs", "collection_method", "period_start", "period_end", "presentation_conditions_ref", "source_identity", "sample_set_ids", "overlaps_sample_sets", "corrects_record_ids"],
+  "collection_methods": ["survey", "observation", "external-review", "unknown"],
+  "scope_fields": ["project_id", "work_revision", "collection_method", "period_start", "period_end", "presentation_conditions_ref", "work_id", "requirement_id", "presentation_mode", "requirement_tags"]
+}
