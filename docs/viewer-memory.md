@@ -1,5 +1,13 @@
 # Viewer memory
 
+The wrapper closes nested source provenance to origin_instance_id, record_id,
+revision, source_repository, code_commit, knowledge_commit, locator and
+content_sha256. Locators are opaque references; response metadata is forbidden.
+Lineage references use the common four-part artifact identity and must resolve
+in the pinned owner history. Invalidations must match explicit native corrections.
+Successful stored retrieval reports knowledge_status COMMITTED; operation or
+parent collisions report CONFLICT. Assessment status remains a separate axis.
+
 AAK-12 / Issue #6 implements the pinned AAK-SPEC/PLAN
 `b0e7c7f8d0a1f756fa708deef4fb380a62e45e0d`. Existing record, assessment and export
 v1 contracts and Wilson thresholds remain unchanged.
