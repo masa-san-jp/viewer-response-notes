@@ -9,6 +9,8 @@ contact details, psychological or medical diagnoses, or raw assets.
 
 ## Contracts
 
+- `schemas/viewer-memory.schema.json`: `viewer-memory/v1`, the AAK-12 condition/lineage wrapper around the existing record. See [viewer memory](docs/viewer-memory.md) for owner Git, corrections and scoped retrieval.
+
 - `schemas/viewer-response-record.schema.json`: `viewer-response-record/v1`
 - `schemas/viewer-response-assessment.schema.json`: `viewer-response-assessment/v1`
 - `schemas/research-signal-export.schema.json`: `research-signal-export/v1`
