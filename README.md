@@ -78,3 +78,7 @@ python3 tools/export_signals.py tests/fixtures/viewer-response-records.jsonl --e
 ```
 
 Exportは決定的かつatomicです。同一bytesの再実行は`ALREADY_EXPORTED`、既存ファイルとの内容差分は上書きせず`VIEWER-EXPORT-CONFLICT`になります。外部API、GitHub、Driveへ送信する処理はこのrepoから起動しません。
+
+## AP-04 owner verification
+
+The qualified `feat/viewer-response-contracts` source `2c1167c7ce95f0bfa3a2e9f0896bec5836009a87` was verified for AP-04 from orchestration Issue #241. The aggregate-only schemas, opaque provenance, conservative assessments, deterministic export and privacy rejection rules are already present; the verification branch records evidence only. The owner validator, 13-test suite, README export example with a fresh temporary output, and `git diff --check` passed. No names, free text, psychological or medical inference, raw asset, credential, record payload or external write was used.
