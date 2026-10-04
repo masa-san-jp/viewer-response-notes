@@ -38,6 +38,39 @@ def record(record_id: str, requirement_id: str, *, source_kind: str = "measured"
 
 
 class ViewerContractTests(unittest.TestCase):
+    def test_agent_instructions_are_self_contained(self) -> None:
+        instructions = (Path(__file__).resolve().parents[1] / "AGENTS.md").read_text(encoding="utf-8")
+        for fragment in (
+            "Issue #2",
+            "schemas/",
+            "README.md",
+            "tests/",
+            "inspect -> decide -> edit -> test -> diff -> report",
+            "records/",
+            "assessments/",
+            "exports/",
+            "append-only",
+            "generated outputs",
+            "python3 tools/validate.py --check",
+            "python3 -m unittest discover -s tests -v",
+            "git diff --check",
+            "PRIVATE_RAW",
+            "RESTRICTED",
+            "free text",
+            "credentials",
+            "aggregate-only",
+            "metadata-only",
+            "Completion report",
+            "explicit feedback",
+            "inferred feedback",
+            "BLOCKED",
+            "merge",
+            "release",
+        ):
+            self.assertIn(fragment, instructions)
+        self.assertNotIn("/Users/", instructions)
+        self.assertNotIn("/private/", instructions)
+
     def test_record_is_closed_and_dedup_is_canonical(self) -> None:
         value = record("VRR-001", "REQ-1", sample_size=4, passed=2, failed=1, unknown=1)
         self.assertIs(validate_record(value), value)

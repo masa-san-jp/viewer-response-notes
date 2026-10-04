@@ -1,6 +1,7 @@
 import copy
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -19,8 +20,23 @@ NOW = "2026-09-05T00:00:00Z"
 class ViewerMemoryTests(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory(); self.addCleanup(temp.cleanup)
-        self.root = Path(temp.name); self.store_root = self.root / "memory"; self.store_root.mkdir()
-        self.code = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        # Canonicalize OS temporary ancestors while keeping store symlinks forbidden.
+        self.root = Path(temp.name).resolve(); self.store_root = self.root / "memory"; self.store_root.mkdir()
+        # Archive distributions have no .git. Exercise the real qualification gate
+        # against an isolated clean checkout of the code under test, also for CLI.
+        self.code_root = self.root / "code"; self.code_root.mkdir()
+        for directory in ("tools", "config", "schemas"):
+            shutil.copytree(ROOT / directory, self.code_root / directory,
+                            ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        shutil.copyfile(ROOT / ".gitignore", self.code_root / ".gitignore")
+        subprocess.run(["git", "init", "-q", str(self.code_root)], check=True)
+        subprocess.run(["git", "-C", str(self.code_root), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(self.code_root), "-c", "user.name=Synthetic",
+                        "-c", "user.email=synthetic@example.invalid", "commit", "-q",
+                        "-m", "Qualify synthetic code fixture"], check=True)
+        self.code = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.code_root, text=True).strip()
+        code_root = patch("viewer_memory.ROOT", self.code_root)
+        code_root.start(); self.addCleanup(code_root.stop)
         gitdir = self.store_root / "objects.git"
         subprocess.run(["git", "init", "--bare", "-q", str(gitdir)], check=True)
         (self.store_root / "store.json").write_text(json.dumps({"owner": "viewer-response-notes", "creator": "creator-a", "collection": "viewer-a"}))
@@ -73,7 +89,7 @@ class ViewerMemoryTests(unittest.TestCase):
         query = self.root / "query.json"; output = self.root / "export.json"
         query.write_text(json.dumps({"store_root": str(self.store_root), "creator": "creator-a", "collection": "viewer-a", "code_commit": self.code,
             "knowledge_commit": last["target_commit"], "scope": self.scope(a), "at": NOW}))
-        command = [sys.executable, str(ROOT / "tools/export_signals.py"), "--memory-query", str(query), "--output", str(output)]
+        command = [sys.executable, str(self.code_root / "tools/export_signals.py"), "--memory-query", str(query), "--output", str(output)]
         first = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(0, first.returncode, first.stdout + first.stderr)
         self.assertEqual(result, json.loads(output.read_text()))
@@ -147,6 +163,26 @@ class ViewerMemoryTests(unittest.TestCase):
         with patch("export_signals.os.link", side_effect=competing_writer), self.assertRaises(ValueError):
             write_export({"synthetic": True}, output)
         self.assertEqual("other writer", output.read_text())
+
+    def test_owner_store_symlinks_and_nonexternal_paths_remain_rejected(self):
+        link = self.root / "linked-memory"
+        link.symlink_to(self.store_root, target_is_directory=True)
+        for path in (link, Path("memory"), self.code_root, self.code_root / "memory"):
+            with self.subTest(path=path), self.assertRaisesRegex(ValueError, "explicit nonsymlink external"):
+                ViewerMemory(path, "creator-a", "viewer-a", self.code)
+        git_link_store = self.root / "git-link-memory"; git_link_store.mkdir()
+        shutil.copyfile(self.store_root / "store.json", git_link_store / "store.json")
+        (git_link_store / "objects.git").symlink_to(self.store_root / "objects.git", target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlink Git store forbidden"):
+            ViewerMemory(git_link_store, "creator-a", "viewer-a", self.code)
+
+    def test_code_checkout_must_remain_clean_and_pinned(self):
+        with self.assertRaisesRegex(ValueError, "clean qualified code checkout required"):
+            ViewerMemory(self.store_root, "creator-a", "viewer-a", "0" * 40)
+        code_file = self.code_root / "tools/viewer_memory.py"
+        code_file.write_text(code_file.read_text() + "\n# synthetic unqualified change\n")
+        with self.assertRaisesRegex(ValueError, "clean qualified code checkout required"):
+            ViewerMemory(self.store_root, "creator-a", "viewer-a", self.code)
 
 
 if __name__ == "__main__": unittest.main()
